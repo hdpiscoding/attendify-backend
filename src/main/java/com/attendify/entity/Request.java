@@ -38,6 +38,9 @@ public class Request extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private RequestType type;
 
+    @Column(name = "reason", nullable = false)
+    private String reason;
+
     @Column(name = "from_date", nullable = false)
     private LocalDate fromDate;
 

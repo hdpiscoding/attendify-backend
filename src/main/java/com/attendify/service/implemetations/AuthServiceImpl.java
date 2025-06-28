@@ -5,6 +5,7 @@ import com.attendify.dto.LoginDTO;
 import com.attendify.dto.RegisterDTO;
 import com.attendify.dto.UserDTO;
 import com.attendify.entity.User;
+import com.attendify.exception.UserNotActiveException;
 import com.attendify.mapper.UserMapper;
 import com.attendify.repository.UserRepository;
 import com.attendify.service.interfaces.AuthService;
@@ -16,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
@@ -27,6 +29,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
 
     @Override
+    @Transactional
     public AuthResponseDTO register(RegisterDTO request) {
         User user = new User();
         user.setEmail(request.getEmail());
@@ -36,7 +39,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPhone(request.getPhone());
         user.setDepartment(request.getDepartment());
         user.setActive(true);
-        user.setRole(Role.EMPLOYEE);
+        user.setRole(Role.ADMIN);
         User newUser = userRepository.save(user);
         String token = jwtService.generateToken(newUser);
         return AuthResponseDTO
@@ -47,7 +50,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponseDTO login(LoginDTO request) {
+    @Transactional
+    public AuthResponseDTO login(LoginDTO request){
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -55,6 +59,9 @@ public class AuthServiceImpl implements AuthService {
         );
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        if (!user.isActive()) {
+            throw new UserNotActiveException("User is not active, please contact support.");
+        }
         String token = jwtService.generateToken(user);
         UserDTO userDTO = userMapper.toDto(user);
         return AuthResponseDTO

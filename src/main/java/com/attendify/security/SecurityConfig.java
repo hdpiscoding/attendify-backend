@@ -35,24 +35,17 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
 
+                        // Both User and Admin APIs
+                        .requestMatchers(HttpMethod.POST, "/api/v1/requests/filter").authenticated()
+
 //                        // User APIs
 //                        .requestMatchers("/api/v1/users/me/**").hasAnyAuthority("USER", "ADMIN")
 //                        .requestMatchers(HttpMethod.GET, "/api/v1/reels/{id}").hasAuthority("USER")
 //                        .requestMatchers(HttpMethod.GET, "/api/v1/topics/{id}/me").hasAuthority("USER")
 //
 //                        // Admin APIs
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/users/{id}").hasAuthority("ADMIN")
-//                        .requestMatchers("/api/v1/media/**").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/users/{id}/analysis").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.POST, "/api/v1/lessons").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.PUT, "/api/v1/lessons/{id}").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.DELETE, "/api/v1/lessons/{id}").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.POST, "/api/v1/topics").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.PUT, "/api/v1/topics/{id}").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.DELETE, "/api/v1/topics/{id}").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.POST, "/api/v1/reels").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.PUT, "/api/v1/reels/{id}").hasAuthority("ADMIN")
-//                        .requestMatchers(HttpMethod.DELETE, "/api/v1/reels/{id}").hasAuthority("ADMIN")
+                        .requestMatchers("/api/v1/requests/{id}/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/requests/{id}").hasAuthority("ADMIN")
 
                         // default APIs
                         .anyRequest().authenticated()

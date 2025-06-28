@@ -1,5 +1,6 @@
 package com.attendify.dto;
 
+import com.attendify.utils.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class UserDTO {
     private String fullname;
     private String phone;
     private String avatar;
+    private Role role;
     private LocalDate dob;
     private String department;
 }
