@@ -17,7 +17,6 @@ import java.util.UUID;
 @Builder
 public class AttendanceLogDTO {
     private UUID id;
-    private UserDTO user;
     private LocalDate workDate;
     private LocalDateTime checkIn;
     private LocalDateTime checkOut;

@@ -35,4 +35,10 @@ public class OperationController extends BaseController {
         UUID userId = jwtService.extractUserId(authHeader.substring(7));
         return buildResponse(operationService.getUserOperationStatusNow(userId), HttpStatus.OK, "User status retrieved successfully");
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<Object> getMyAttendanceLogs(@RequestHeader("Authorization") String authHeader, @RequestParam Integer page , @RequestParam Integer limit) {
+        UUID userId = jwtService.extractUserId(authHeader.substring(7));
+        return buildResponse(operationService.getMyAttendanceLogs(userId, page, limit), HttpStatus.OK, "User operations retrieved successfully");
+    }
 }

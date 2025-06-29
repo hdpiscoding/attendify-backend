@@ -12,6 +12,7 @@ import com.attendify.utils.constants.OperationConstants;
 import com.attendify.utils.enums.CheckInStatus;
 import com.attendify.utils.enums.CheckOutStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -103,6 +105,16 @@ public class OperationServiceImpl implements OperationService {
     @Override
     public PaginatedResponseDTO<AttendanceLogDTO> getMyAttendanceLogs(UUID userId, int page, int limit) {
         PageRequest pageRequest = PageRequest.of(page - 1, limit);
-        return null;
+        Page<AttendanceLog> attendanceLogs = attendanceLogRepository.findByUserId(userId, pageRequest);
+        List<AttendanceLogDTO> attendanceLogDTOs = attendanceLogMapper.toDtoList(attendanceLogs.getContent());
+
+        return new PaginatedResponseDTO<> (
+                attendanceLogDTOs,
+                attendanceLogs.getNumber() + 1,
+                attendanceLogs.getSize(),
+                attendanceLogs.getTotalElements(),
+                attendanceLogs.getTotalPages(),
+                attendanceLogs.isLast()
+        );
     }
 }

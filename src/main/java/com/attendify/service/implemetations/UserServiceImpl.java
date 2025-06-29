@@ -27,8 +27,8 @@ public class UserServiceImpl implements UserService {
         List<UserDTO> userDTOs = userMapper.toDtoList(users.getContent());
         return new PaginatedResponseDTO<>(
                 userDTOs,
-                page,
-                limit,
+                users.getNumber() + 1,
+                users.getSize(),
                 users.getTotalElements(),
                 users.getTotalPages(),
                 users.isLast()
