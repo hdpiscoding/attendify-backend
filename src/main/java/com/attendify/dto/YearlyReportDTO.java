@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class YearlyReportDTO {
+    private int month;
+    private int year;
     private UserDTO user;
     private int totalWorkingDays;
     private int totalAbsentDays;
