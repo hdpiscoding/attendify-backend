@@ -1,7 +1,7 @@
 package com.attendify.controller;
 
 import com.attendify.base.BaseController;
-import com.attendify.dto.OperationDTO;
+import com.attendify.dto.OperationRequestDTO;
 import com.attendify.service.interfaces.JwtService;
 import com.attendify.service.interfaces.OperationService;
 import lombok.RequiredArgsConstructor;
@@ -19,17 +19,15 @@ public class OperationController extends BaseController {
     private final JwtService jwtService;
 
     @PostMapping("/check-in")
-    public ResponseEntity<Object> checkIn(@RequestHeader("Authorization") String authHeader,@RequestBody OperationDTO operationDTO) {
+    public ResponseEntity<Object> checkIn(@RequestHeader("Authorization") String authHeader,@RequestBody OperationRequestDTO operationRequestDTO) {
         UUID userId = jwtService.extractUserId(authHeader.substring(7));
-        operationService.checkIn(userId, operationDTO);
-        return buildResponse(null, HttpStatus.OK, "Check in successfully");
+        return buildResponse(operationService.checkIn(userId, operationRequestDTO), HttpStatus.OK, "Check in successfully");
     }
 
     @PostMapping("/check-out")
-    public ResponseEntity<Object> checkOut(@RequestHeader("Authorization") String authHeader,@RequestBody OperationDTO operationDTO) {
+    public ResponseEntity<Object> checkOut(@RequestHeader("Authorization") String authHeader,@RequestBody OperationRequestDTO operationRequestDTO) {
         UUID userId = jwtService.extractUserId(authHeader.substring(7));
-        operationService.checkOut(userId, operationDTO);
-        return buildResponse(null, HttpStatus.OK, "Check out successfully");
+        return buildResponse(operationService.checkOut(userId, operationRequestDTO), HttpStatus.OK, "Check out successfully");
     }
 
     @GetMapping("status/me")

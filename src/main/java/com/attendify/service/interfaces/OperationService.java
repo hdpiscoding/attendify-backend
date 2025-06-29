@@ -1,12 +1,12 @@
 package com.attendify.service.interfaces;
 
-import com.attendify.dto.OperationDTO;
-import com.attendify.dto.OperationStatusDTO;
+import com.attendify.dto.*;
 
 import java.util.UUID;
 
 public interface OperationService {
-    void checkIn(UUID userId, OperationDTO operationDTO);
-    void checkOut(UUID userId, OperationDTO operationDTO);
+    OperationResponseDTO checkIn(UUID userId, OperationRequestDTO operationRequestDTO);
+    OperationResponseDTO checkOut(UUID userId, OperationRequestDTO operationRequestDTO);
     OperationStatusDTO getUserOperationStatusNow(UUID userId);
+    PaginatedResponseDTO<AttendanceLogDTO> getMyAttendanceLogs(UUID userId, int page, int limit);
 }
