@@ -3,6 +3,7 @@ package com.attendify.entity;
 import com.attendify.utils.enums.CheckInStatus;
 import com.attendify.utils.enums.CheckOutStatus;
 import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UuidGenerator;
@@ -15,6 +16,11 @@ import java.util.UUID;
 @Table(name = "attendance_logs", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"user_id", "work_date"})
 })
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AttendanceLog {
     @Id
     @UuidGenerator
