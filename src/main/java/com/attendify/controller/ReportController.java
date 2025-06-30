@@ -23,4 +23,11 @@ public class ReportController extends BaseController {
         return buildResponse(reportService.getMonthlyReport(userId, month, year), HttpStatus.OK,
                              "Get monthly report successfully!");
     }
+
+    @GetMapping("/me/yearly")
+    public ResponseEntity<Object> getYearlyReport(@RequestHeader("Authorization") String authHeader, @RequestParam Integer year) {
+        UUID userId = jwtService.extractUserId(authHeader.substring(7));
+        return buildResponse(reportService.getYearlyReport(userId, year), HttpStatus.OK,
+                             "Get yearly report successfully!");
+    }
 }

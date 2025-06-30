@@ -14,6 +14,6 @@ public class RequestSpecification {
 
     public static Specification<Request> hasEmployeeId(UUID employeeId) {
         return (root, query, cb) ->
-                employeeId == null ? null : cb.equal(root.get("employee").get("id"), employeeId);
+                employeeId == null ? null : cb.equal(root.get("user").get("id"), employeeId);
     }
 }
