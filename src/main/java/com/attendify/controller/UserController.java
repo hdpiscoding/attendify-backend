@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -28,5 +29,12 @@ public class UserController extends BaseController {
     @GetMapping("")
     public ResponseEntity<Object> getAllUsers(@RequestParam Integer page , @RequestParam Integer limit) {
         return buildResponse(userService.getAllUsers(page, limit), HttpStatus.OK, "All users fetched successfully");
+    }
+
+    @PostMapping("/me/password")
+    public ResponseEntity<Object> changePassword(@RequestHeader("Authorization") String authHeader,@RequestBody Map<String, String> body) {
+        UUID userId = jwtService.extractUserId(authHeader.substring(7));
+        userService.changePassword(userId, body.get("password"));
+        return buildResponse(null, HttpStatus.OK, "Change password successfully");
     }
 }

@@ -8,10 +8,9 @@ import com.attendify.service.interfaces.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -29,5 +28,11 @@ public class AuthController extends BaseController {
     public ResponseEntity<Object> login(@RequestBody LoginDTO request) {
         AuthResponseDTO response = authService.login(request);
         return buildResponse(response, HttpStatus.OK, "User logged in successfully");
+    }
+
+    @GetMapping("/callback/google")
+    public ResponseEntity<Object> googleCallback(@AuthenticationPrincipal OidcUser user) {
+        AuthResponseDTO response = authService.GoogleLogin(user);
+        return buildResponse(response, HttpStatus.OK, "User logged in successfully via Google");
     }
 }

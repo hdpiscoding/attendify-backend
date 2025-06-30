@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface UserService {
     PaginatedResponseDTO<UserDTO> getAllUsers(int page, int limit);
     UserDTO getUserById(UUID id);
+    void changePassword(UUID id, String newPassword);
 }

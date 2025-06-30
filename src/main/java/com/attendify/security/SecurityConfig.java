@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -39,6 +40,7 @@ public class SecurityConfig {
                         // Public APIs
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
+                        .requestMatchers("/login", "/api/auth/**", "/oauth2/**").permitAll()
 
                         // Both User and Admin APIs
                         .requestMatchers(HttpMethod.POST, "/api/v1/requests/filter").authenticated()
@@ -54,6 +56,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/users").hasAuthority("ADMIN")
                         // default APIs
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .oidcUserService(oidcUserService())
+                        )
+                        .successHandler((request, response, authentication) -> {
+                            response.sendRedirect("/api/auth/callback/google");
+                        })
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
                 )
                 .sessionManagement((session) -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
@@ -72,6 +88,11 @@ public class SecurityConfig {
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .httpBasic(Customizer.withDefaults())
                 .build();
+    }
+
+    @Bean
+    public OidcUserService oidcUserService() {
+        return new OidcUserService();
     }
 
     @Bean

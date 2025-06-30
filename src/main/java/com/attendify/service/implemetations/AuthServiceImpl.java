@@ -15,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,13 +35,13 @@ public class AuthServiceImpl implements AuthService {
     public AuthResponseDTO register(RegisterDTO request) {
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setPassword(passwordEncoder.encode("123456"));
         user.setFullname(request.getFullname());
         user.setDob(request.getDob());
         user.setPhone(request.getPhone());
         user.setDepartment(request.getDepartment());
         user.setActive(true);
-        user.setRole(Role.ADMIN);
+        user.setRole(Role.EMPLOYEE);
         User newUser = userRepository.save(user);
         String token = jwtService.generateToken(newUser);
         return AuthResponseDTO
@@ -68,6 +70,48 @@ public class AuthServiceImpl implements AuthService {
                 .builder()
                 .user(userDTO)
                 .token(token)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public AuthResponseDTO GoogleLogin(OidcUser oidcUser) {
+        String email = oidcUser.getEmail();
+        String fullname = oidcUser.getFullName();
+        String picture = oidcUser.getPicture();
+
+        User user;
+
+        if (userRepository.existsByEmail(email)) {
+            user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (user.getFullname() == null || user.getFullname().isEmpty()) {
+                user.setFullname(fullname);
+            }
+
+            if (user.getAvatar() == null || user.getAvatar().isEmpty()) {
+                user.setAvatar(picture);
+            }
+
+            user = userRepository.save(user);
+        } else {
+            user = User.builder()
+                    .email(email)
+                    .fullname(fullname)
+                    .avatar(picture)
+                    .active(true)
+                    .role(Role.EMPLOYEE)
+                    .department("Unassigned")
+                    .build();
+
+            user = userRepository.save(user);
+        }
+
+        String token = jwtService.generateToken(user);
+        return AuthResponseDTO.builder()
+                .token(token)
+                .user(userMapper.toDto(user))
                 .build();
     }
 }

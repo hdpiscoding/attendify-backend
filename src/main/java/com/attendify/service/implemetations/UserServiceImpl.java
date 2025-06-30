@@ -6,9 +6,11 @@ import com.attendify.entity.User;
 import com.attendify.mapper.UserMapper;
 import com.attendify.repository.UserRepository;
 import com.attendify.service.interfaces.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public PaginatedResponseDTO<UserDTO> getAllUsers(int page, int limit) {
@@ -39,5 +42,12 @@ public class UserServiceImpl implements UserService {
     public UserDTO getUserById(UUID id) {
         return userMapper.toDto(userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id)));
+    }
+
+    @Override
+    public void changePassword(UUID id, String newPassword) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }

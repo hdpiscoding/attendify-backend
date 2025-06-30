@@ -1,7 +1,6 @@
 package com.attendify.service.implemetations;
 
 import com.attendify.dto.MonthlyReportDTO;
-import com.attendify.dto.PaginatedResponseDTO;
 import com.attendify.dto.YearlyReportDTO;
 import com.attendify.entity.AttendanceLog;
 import com.attendify.entity.Request;
@@ -19,10 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.OptionalDouble;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -32,20 +28,22 @@ public class ReportServiceImpl implements ReportService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    // Helper method to calculate average check-in time
-    private LocalDateTime calculateAverageCheckInTime(List<AttendanceLog> logs) {
+    private LocalDateTime calculateAverageTime(List<AttendanceLog> logs,
+                                               java.util.function.Function<AttendanceLog, LocalDateTime> timeExtractor) {
         if (logs.isEmpty()) {
             return null;
         }
 
         OptionalDouble avgHour = logs.stream()
-                .filter(log -> log.getCheckIn() != null)
-                .mapToInt(log -> log.getCheckIn().getHour())
+                .map(timeExtractor)
+                .filter(Objects::nonNull)
+                .mapToInt(LocalDateTime::getHour)
                 .average();
 
         OptionalDouble avgMinute = logs.stream()
-                .filter(log -> log.getCheckIn() != null)
-                .mapToInt(log -> log.getCheckIn().getMinute())
+                .map(timeExtractor)
+                .filter(Objects::nonNull)
+                .mapToInt(LocalDateTime::getMinute)
                 .average();
 
         if (avgHour.isPresent() && avgMinute.isPresent()) {
@@ -56,22 +54,6 @@ public class ReportServiceImpl implements ReportService {
         }
 
         return null;
-    }
-
-    // Helper method to calculate business days in month
-    private int calculateBusinessDaysInMonth(int month, int year) {
-        YearMonth yearMonth = YearMonth.of(year, month);
-        int days = yearMonth.lengthOfMonth();
-        int businessDays = 0;
-
-        for (int day = 1; day <= days; day++) {
-            LocalDate date = LocalDate.of(year, month, day);
-            if (date.getDayOfWeek().getValue() < 6) { // Monday to Friday
-                businessDays++;
-            }
-        }
-
-        return businessDays;
     }
 
     @Override
@@ -127,24 +109,25 @@ public class ReportServiceImpl implements ReportService {
             LocalDate startDate = yearMonth.atDay(1);
             LocalDate endDate = yearMonth.atEndOfMonth();
 
-            // Get attendance logs and requests for this month
+            // Get attendance logs for this month
             List<AttendanceLog> attendanceLogs = attendanceLogRepository.findByUserIdAndMonthAndYear(userId, month, year);
+
+            // Get requests for this month
             List<Request> requests = requestRepository.findByUserIdAndFromDateBetween(userId, startDate, endDate);
 
             // Calculate statistics
             int totalWorkingDays = attendanceLogs.size();
-            int businessDays = calculateBusinessDaysInMonth(month, year);
-            int totalAbsentDays = businessDays - totalWorkingDays;
-
-            // Calculate average check-in time
-            LocalDateTime averageCheckInTime = calculateAverageCheckInTime(attendanceLogs);
-
-            // Calculate total hours
             double totalHours = attendanceLogs.stream()
                     .mapToDouble(AttendanceLog::getTotalHours)
                     .sum();
 
-            // Count requests
+            // Calculate average check-in and check-out times
+            LocalDateTime averageCheckInTime = calculateAverageTime(attendanceLogs,
+                    AttendanceLog::getCheckIn);
+            LocalDateTime averageCheckOutTime = calculateAverageTime(attendanceLogs,
+                    AttendanceLog::getCheckOut);
+
+            // Count request statistics
             int totalRequests = requests.size();
             int approvedRequests = (int) requests.stream()
                     .filter(r -> r.getStatus() == RequestStatus.APPROVED)
@@ -153,14 +136,14 @@ public class ReportServiceImpl implements ReportService {
                     .filter(r -> r.getStatus() == RequestStatus.REJECTED)
                     .count();
 
-            // Build and add the monthly report to our yearly list
-            YearlyReportDTO report = YearlyReportDTO.builder()
+            // Create and add monthly report to the list
+            YearlyReportDTO monthlyReport = YearlyReportDTO.builder()
                     .month(month)
                     .year(year)
                     .user(userMapper.toDto(user))
                     .totalWorkingDays(totalWorkingDays)
-                    .totalAbsentDays(totalAbsentDays)
                     .averageCheckInTime(averageCheckInTime)
+                    .averageCheckOutTime(averageCheckOutTime)
                     .totalHours(totalHours)
                     .totalRequests(totalRequests)
                     .approvedRequests(approvedRequests)
@@ -168,7 +151,7 @@ public class ReportServiceImpl implements ReportService {
                     .createdAt(LocalDateTime.now())
                     .build();
 
-            yearlyReports.add(report);
+            yearlyReports.add(monthlyReport);
         }
 
         return yearlyReports;

@@ -16,8 +16,8 @@ public class YearlyReportDTO {
     private int year;
     private UserDTO user;
     private int totalWorkingDays;
-    private int totalAbsentDays;
     private LocalDateTime averageCheckInTime;
+    private LocalDateTime averageCheckOutTime;
     private double totalHours;
     private int totalRequests;
     private int approvedRequests;
