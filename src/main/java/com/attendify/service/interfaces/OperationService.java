@@ -8,5 +8,5 @@ public interface OperationService {
     OperationResponseDTO checkIn(UUID userId, OperationRequestDTO operationRequestDTO);
     OperationResponseDTO checkOut(UUID userId, OperationRequestDTO operationRequestDTO);
     OperationStatusDTO getUserOperationStatusNow(UUID userId);
-    PaginatedResponseDTO<AttendanceLogDTO> getMyAttendanceLogs(UUID userId, int page, int limit);
+    PaginatedResponseDTO<OperationResponseDTO> getMyAttendanceLogs(UUID userId, int page, int limit);
 }

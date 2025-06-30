@@ -14,6 +14,7 @@ import com.attendify.utils.enums.CheckOutStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -103,18 +105,67 @@ public class OperationServiceImpl implements OperationService {
     }
 
     @Override
-    public PaginatedResponseDTO<AttendanceLogDTO> getMyAttendanceLogs(UUID userId, int page, int limit) {
-        PageRequest pageRequest = PageRequest.of(page - 1, limit);
-        Page<AttendanceLog> attendanceLogs = attendanceLogRepository.findByUserId(userId, pageRequest);
-        List<AttendanceLogDTO> attendanceLogDTOs = attendanceLogMapper.toDtoList(attendanceLogs.getContent());
+    public PaginatedResponseDTO<OperationResponseDTO> getMyAttendanceLogs(UUID userId, int page, int limit) {
+        // Fetch logs by userId sorted by workDate in descending order
+        PageRequest pageRequest = PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "workDate"));
+        Page<AttendanceLog> attendanceLogPage = attendanceLogRepository.findByUserId(userId, pageRequest);
 
-        return new PaginatedResponseDTO<> (
-                attendanceLogDTOs,
-                attendanceLogs.getNumber() + 1,
-                attendanceLogs.getSize(),
-                attendanceLogs.getTotalElements(),
-                attendanceLogs.getTotalPages(),
-                attendanceLogs.isLast()
+        // Create separate operations for check-in and check-out
+        List<OperationResponseDTO> operations = new ArrayList<>();
+
+        for (AttendanceLog log : attendanceLogPage.getContent()) {
+            // Add check-out first if it exists
+            if (log.getCheckOut() != null) {
+                operations.add(OperationResponseDTO.builder()
+                        .operation("Check-out")
+                        .date(log.getWorkDate())
+                        .time(log.getCheckOut())
+                        .status(log.getStatusOut() != null ? log.getStatusOut().toString() : null)
+                        .build());
+            }
+
+            // Then add check-in
+            if (log.getCheckIn() != null) {
+                operations.add(OperationResponseDTO.builder()
+                        .operation("Check-in")
+                        .date(log.getWorkDate())
+                        .time(log.getCheckIn())
+                        .status(log.getStatusIn() != null ? log.getStatusIn().toString() : null)
+                        .build());
+            }
+        }
+
+        // Sort operations: newer first and check-out before check-in for the same day
+        operations.sort((o1, o2) -> {
+            // First compare by date (descending)
+            int dateComparison = o2.getDate().compareTo(o1.getDate());
+            if (dateComparison != 0) {
+                return dateComparison;
+            }
+
+            // For same date, check-out comes before check-in
+            if (o1.getOperation().equals("Check-out") && o2.getOperation().equals("Check-in")) {
+                return -1;
+            } else if (o1.getOperation().equals("Check-in") && o2.getOperation().equals("Check-out")) {
+                return 1;
+            }
+
+            // For same operation type, sort by time (descending)
+            return o2.getTime().compareTo(o1.getTime());
+        });
+
+        // Calculate pagination info (approximate since we're transforming data)
+        long totalLogs = attendanceLogPage.getTotalElements();
+        long estimatedTotalOperations = totalLogs * 2; // Estimate assuming most logs have both check-in and check-out
+        int totalPages = (int) Math.ceil((double) estimatedTotalOperations / limit);
+
+        return new PaginatedResponseDTO<>(
+                operations,
+                page,
+                limit,
+                estimatedTotalOperations,
+                totalPages,
+                attendanceLogPage.isLast()
         );
     }
 }
