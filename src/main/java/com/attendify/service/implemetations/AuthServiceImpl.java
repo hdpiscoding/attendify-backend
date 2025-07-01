@@ -1,11 +1,9 @@
 package com.attendify.service.implemetations;
 
-import com.attendify.dto.AuthResponseDTO;
-import com.attendify.dto.LoginDTO;
-import com.attendify.dto.RegisterDTO;
-import com.attendify.dto.UserDTO;
+import com.attendify.dto.*;
 import com.attendify.entity.User;
 import com.attendify.exception.UserNotActiveException;
+import com.attendify.exception.UserNotExistException;
 import com.attendify.mapper.UserMapper;
 import com.attendify.repository.UserRepository;
 import com.attendify.service.interfaces.AuthService;
@@ -75,43 +73,26 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public AuthResponseDTO GoogleLogin(OidcUser oidcUser) {
-        String email = oidcUser.getEmail();
-        String fullname = oidcUser.getFullName();
-        String picture = oidcUser.getPicture();
-
-        User user;
-
-        if (userRepository.existsByEmail(email)) {
-            user = userRepository.findByEmail(email)
+    public AuthResponseDTO GoogleLogin(GoogleLoginDTO user) {
+        User temp_user;
+        if (userRepository.existsByEmail(user.getEmail())) {
+            temp_user = userRepository.findByEmail(user.getEmail())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-
-            if (user.getFullname() == null || user.getFullname().isEmpty()) {
-                user.setFullname(fullname);
+            if (temp_user.getFullname() == null || temp_user.getFullname().isEmpty()) {
+                temp_user.setFullname(user.getName());
             }
-
-            if (user.getAvatar() == null || user.getAvatar().isEmpty()) {
-                user.setAvatar(picture);
+            if (temp_user.getAvatar() == null || temp_user.getAvatar().isEmpty()) {
+                temp_user.setAvatar(user.getImage());
             }
-
-            user = userRepository.save(user);
-        } else {
-            user = User.builder()
-                    .email(email)
-                    .fullname(fullname)
-                    .avatar(picture)
-                    .active(true)
-                    .role(Role.EMPLOYEE)
-                    .department("Unassigned")
+            temp_user = userRepository.save(temp_user);
+            String token = jwtService.generateToken(temp_user);
+            return AuthResponseDTO.builder()
+                    .token(token)
+                    .user(userMapper.toDto(temp_user))
                     .build();
-
-            user = userRepository.save(user);
         }
-
-        String token = jwtService.generateToken(user);
-        return AuthResponseDTO.builder()
-                .token(token)
-                .user(userMapper.toDto(user))
-                .build();
+        else {
+            throw new UserNotExistException("User not exists, please contact support.");
+        }
     }
 }

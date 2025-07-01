@@ -141,4 +141,11 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "User not active", ex.getMessage(), request.getDescription(false));
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(UserNotExistException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotExistException(UserNotExistException ex, WebRequest request) {
+        logger.error("Invalid OTP: {}", ex.getMessage(), ex);
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "User not exist", ex.getMessage(), request.getDescription(false));
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
 }

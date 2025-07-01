@@ -2,6 +2,7 @@ package com.attendify.controller;
 
 import com.attendify.base.BaseController;
 import com.attendify.dto.AuthResponseDTO;
+import com.attendify.dto.GoogleLoginDTO;
 import com.attendify.dto.LoginDTO;
 import com.attendify.dto.RegisterDTO;
 import com.attendify.service.interfaces.AuthService;
@@ -30,8 +31,8 @@ public class AuthController extends BaseController {
         return buildResponse(response, HttpStatus.OK, "User logged in successfully");
     }
 
-    @GetMapping("/callback/google")
-    public ResponseEntity<Object> googleCallback(@AuthenticationPrincipal OidcUser user) {
+    @PostMapping("/login/google")
+    public ResponseEntity<Object> loginGoogle(@RequestBody GoogleLoginDTO user) {
         AuthResponseDTO response = authService.GoogleLogin(user);
         return buildResponse(response, HttpStatus.OK, "User logged in successfully via Google");
     }

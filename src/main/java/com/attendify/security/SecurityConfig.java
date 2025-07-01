@@ -40,16 +40,11 @@ public class SecurityConfig {
                         // Public APIs
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
-                        .requestMatchers("/login", "/api/auth/**", "/oauth2/**").permitAll()
 
                         // Both User and Admin APIs
                         .requestMatchers(HttpMethod.POST, "/api/v1/requests/filter").authenticated()
 
-//                        // User APIs
-//                        .requestMatchers("/api/v1/users/me/**").hasAnyAuthority("USER", "ADMIN")
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/reels/{id}").hasAuthority("USER")
-//                        .requestMatchers(HttpMethod.GET, "/api/v1/topics/{id}/me").hasAuthority("USER")
-//
+
 //                        // Admin APIs
                         .requestMatchers("/api/v1/requests/{id}/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/requests/{id}").hasAuthority("ADMIN")
@@ -62,9 +57,6 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .oidcUserService(oidcUserService())
                         )
-                        .successHandler((request, response, authentication) -> {
-                            response.sendRedirect("/api/auth/callback/google");
-                        })
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
