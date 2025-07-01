@@ -95,12 +95,17 @@ public class OperationServiceImpl implements OperationService {
         AttendanceLog attendanceLog = attendanceLogRepository.findByUserIdAndWorkDate(userId, LocalDate.now())
                 .orElse(null);
         if (attendanceLog == null) {
-            return new OperationStatusDTO(false, false);
+            return new OperationStatusDTO(false, false, null, null);
         }
         else {
             boolean isCheckedIn = attendanceLog.getCheckIn() != null;
             boolean isCheckedOut = attendanceLog.getCheckOut() != null;
-            return new OperationStatusDTO(isCheckedIn, isCheckedOut);
+            return OperationStatusDTO.builder()
+                    .isCheckIn(isCheckedIn)
+                    .isCheckOut(isCheckedOut)
+                    .checkInTime(attendanceLog.getCheckIn())
+                    .checkOutTime(attendanceLog.getCheckOut())
+                    .build();
         }
     }
 
